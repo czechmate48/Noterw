@@ -12,10 +12,9 @@
 using namespace std;
 
 //FIXME - If no file path is set inside of the NoterwFilePath, Alert the user to somehow set a filepath before using the program
-//FIXME - When a file is being read, it is duplicating the last letter in the file. Not totally sure why
-
-//12/1/18 - The note path isn't setting correctly for some reason. It works sometimes but other times it doesn't. Not really sure why. Go to list notes to see what you can do. Some how the directory 
-//string is getting messed up which keeps the file from being read. Occassionally it has an extra s. Maybe you need to clear the input buffer at some point in the code
+//FIXME - When a file is being read, it is duplicating the last letter in the file. Not totally sure why (see ReadNote() function)
+//FIXME - When the NoterwFilePath text file has absolutely no contents in it, the user will recieve a "Segmentation Fault (core dumped)" error. Temporary fix by loading '/home' as default on instantiation
+//FIXME - If for some reason the user has moved the location of the nano program, this program will need to send an error stating that nano file is not found
 
 char const FILEPATH_DOCUMENT[40] = "/usr/lib/Noterw/NoterwFilePath"; //holds the name of the filePath text file name constant
 
@@ -34,6 +33,8 @@ int main(int argc, char* argv[]) {
 	char filePathOption[11] = "--filePath"; //Same as fp but in extended form
 	char lnOption[4] = "-ln"; //Used to list the notes in the filePath file
 	char listNotesOption[12] = "--listNotes";
+	char wnOption[4] = "-wn"; //Used to list the notes in the filePath file
+	char writeNoteOption[12] = "--writeNote";
 	char hOption[3] = "-h";
 	char helpOption[7] = "--help";
 	int exitVariable = 6; //Holds the command value to make the program exit after completing a command using an option
@@ -50,6 +51,10 @@ int main(int argc, char* argv[]) {
 			}
 			else if (strcmp(lnOption, argv[i]) == 0 || strcmp(listNotesOption, argv[i]) == 0) {
 				ListNotes(false, notes_FilePath_Pointer);
+				modifier = true;
+			}
+			else if (strcmp(wnOption, argv[i]) == 0 || strcmp(writeNoteOption, argv[i]) == 0) {
+				WriteNote(false, notes_FilePath_Pointer);
 				modifier = true;
 			}
 			else if (strcmp(hOption, argv[i]) == 0 || strcmp(helpOption, argv[i]) == 0) {
@@ -73,6 +78,7 @@ string GetFilePath(){
 
 	string nfp = "";
 	char curChar = ' '; //holds the current char being read from the file. MUST use a char instead of string or will prevent noskipws from working correctly
+	
 	ifstream instream(FILEPATH_DOCUMENT);
 
 	if (!instream) {
@@ -213,8 +219,6 @@ void ListNotes(bool fromMainMenu, string* notes_FilePath_Pointer){
 		nfp.pop_back(); 
 	}
 
-	//cout << nfp;
-
 	directory = opendir (nfp.c_str());
 
 	if (directory != NULL){
@@ -233,16 +237,17 @@ void ListNotes(bool fromMainMenu, string* notes_FilePath_Pointer){
 			cout << files.at(i) << endl;
 		}
 	} else {
-		//FIXME - Add an error statement
+		cout << endl << "ERROR 3: UNABLE TO LIST NOTES " << endl;
+		cout << endl << "Troubleshooting step 1: Make sure the file path is correctly pointing to the file with notes.";
+		cout << endl << "If errors persist, please use '--help' modifier to investigate further." << endl;
+		cout.flush(); //Don't forget to flush!
+		exit(1); //Exits the program
 	}
 	
 	return;
 }
 
 void WriteNote(bool fromMainMenu, string* notes_FilePath_Pointer){
-	
-	//This will open the command line text editor "nano". I assume it will be stored in the same location on every file system, though there is a chance that it won't be.
-	//FIXME - If for some reason the user has moved the location of the nano file, it will need to send an error if no nano file is found
 
 	std::system("/bin/nano");
 	return;
@@ -257,7 +262,9 @@ void DisplayHelpScreen(bool fromMainMenu) {
 	cout << endl << "OPTIONS" << endl;
 	cout << endl << "-fp, --filePath " << endl << "     " << "set the location (directory) where personal notes are stored" << endl;
 	cout << endl << "-ln, --listNotes " << endl << "     " << "list the notes located in the directory" << endl;
+	cout << endl << "-wn, --writeNote " << endl << "     " << "open 'nano' to write a new note in the terminal" << endl;	
 	cout << endl << "-h, --help " << endl << "     " << "display this help and exit" << endl;
+	cout << endl << "'read note' " << endl << "     " << "read a note by typing 'Noterw [NOTE NAME]'" << endl;
 
 	return;
 }
